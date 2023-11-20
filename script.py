@@ -182,6 +182,7 @@ def maybe_pad_file_with_silence(
     overwrite: bool,
     min_silence_begin_sec: float,
     min_silence_end_sec: float,
+    play_paddings: bool,
 ) -> Any | None:
     """
     Given a file add silence to the end if it doesn't have enough.
@@ -202,11 +203,11 @@ def maybe_pad_file_with_silence(
         f"Adding {to_add_begin}s to begin and {to_add_end}s to end silence to file {short_name}"
     )
 
-    if to_add_begin > 0:
+    if play_paddings and to_add_begin > 0:
         preview = first_few_sec_with_silence_and_beep(file, to_add_begin)
         play_file(preview)
 
-    if to_add_end > 0:
+    if play_paddings and to_add_end > 0:
         preview = last_few_sec_with_silence_and_beep(file, to_add_end)
         play_file(preview)
 
@@ -221,6 +222,7 @@ def pad_silence_to_files(
     overwrite: bool,
     min_silence_begin_sec: float,
     min_silence_end_sec: float,
+    play_paddings: bool,
 ):
     """Takes a list of files and adds silence to the end if there is not enough
     silence."""
@@ -233,6 +235,7 @@ def pad_silence_to_files(
             overwrite=overwrite,
             min_silence_begin_sec=min_silence_begin_sec,
             min_silence_end_sec=min_silence_end_sec,
+            play_paddings=play_paddings,
         )
         if stream is not None:
             scheduler.enqueue_job(stream, file)
@@ -369,6 +372,12 @@ def parse_args() -> argparse.Namespace:
         help="for 'pad_silence' operation. Specifies min amoun of silence at the end of a file. Default 2s",
     )
     parser.add_argument(
+        "--play_paddings",
+        type=str2bool,
+        default=False,
+        help="for 'pad_silence' operation. Whether to play added paddings."
+    )
+    parser.add_argument(
         "--min_bitrate",
         type=int,
         default=224000,
@@ -388,6 +397,7 @@ def main():
             overwrite=args.overwrite,
             min_silence_begin_sec=args.min_silence_begin_sec,
             min_silence_end_sec=args.min_silence_end_sec,
+            play_paddings=args.play_paddings,
         )
     elif args.operation == "cut":
         cut_files(
