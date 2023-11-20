@@ -18,15 +18,16 @@ import vlc
 
 from scheduler import Scheduler
 
+
 def str2bool(v):
     if isinstance(v, bool):
         return v
-    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+    if v.lower() in ("yes", "true", "t", "y", "1"):
         return True
-    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+    elif v.lower() in ("no", "false", "f", "n", "0"):
         return False
     else:
-        raise argparse.ArgumentTypeError('Boolean value expected.')
+        raise argparse.ArgumentTypeError("Boolean value expected.")
 
 
 logging.basicConfig(
@@ -285,7 +286,6 @@ def cut_files(
     last_n_sec: float,
 ):
     """Cuts files removing first_n_sec and last_n_sec leaving the middle."""
-    bad_files = set()
     for file in files:
         short_name = os.path.basename(file)
         out_file = os.path.join(out_dir, short_name)
@@ -300,8 +300,12 @@ def cut_files(
         ffmpeg.input(file, ss=first_position, to=last_position).output(
             out_file, audio_bitrate=get_bitrate(file), ar=44100
         ).run(overwrite_output=True, capture_stdout=True, capture_stderr=True)
-
-    print(f"Processed all files. The following files are bad {bad_files}")
+        real_duration = get_duration_sec(out_file)
+        expected_duration = last_position - first_position
+        if real_duration + 0.5 < real_duration:
+            logging.error(
+                f"Bad file ${short_name}. Expected ${expected_duration}s but got ${real_duration}s."
+            )
 
 
 def ensure_quality(
