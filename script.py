@@ -298,8 +298,14 @@ def cut_files(
         print(f"\n\nCutting {short_name} file")
         duration = get_duration_sec(file)
 
-        first_position = find_location_in_audiofile(file, first_n_sec)
-        last_position = find_location_in_audiofile(file, duration - last_n_sec)
+        if first_n_sec != 0:
+            first_position = find_location_in_audiofile(file, first_n_sec)
+        else:
+            first_position = 0
+        if last_n_sec != 0:
+            last_position = find_location_in_audiofile(file, duration - last_n_sec)
+        else:
+            last_position = duration
         ffmpeg.input(file, ss=first_position, to=last_position).output(
             out_file, audio_bitrate=get_bitrate(file), ar=44100
         ).run(overwrite_output=True, capture_stdout=True, capture_stderr=True)
