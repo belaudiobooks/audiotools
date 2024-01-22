@@ -1,13 +1,11 @@
 import argparse
-from collections.abc import Sequence, MutableMapping, MutableSequence
+from collections.abc import Sequence
 import functools
 import logging
 import os
 import re
 from dataclasses import dataclass
-import subprocess
 import tempfile
-import threading
 import time
 from typing import Any
 import readchar
@@ -381,7 +379,7 @@ def parse_args() -> argparse.Namespace:
         "--play_paddings",
         type=str2bool,
         default=False,
-        help="for 'pad_silence' operation. Whether to play added paddings."
+        help="for 'pad_silence' operation. Whether to play added paddings.",
     )
     parser.add_argument(
         "--min_bitrate",

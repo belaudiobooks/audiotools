@@ -19,9 +19,10 @@ def get_duration_sec(file: str) -> float:
 
 
 class Scheduler:
-    """Class that runs ffmpeg stream operations in parallel. 
-    It runs N-1 thread where N is number of cores and keeps 
+    """Class that runs ffmpeg stream operations in parallel.
+    It runs N-1 thread where N is number of cores and keeps
     track of progress in each thread."""
+
     def __init__(self):
         self._waiting_jobs: MutableSequence[tuple[Any, str]] = []
         self._running_threads: MutableSequence[threading.Thread] = []
@@ -52,7 +53,6 @@ class Scheduler:
             thread for thread in self._running_threads if thread.is_alive()
         ]
         self._lock.release()
-
 
     def _maybe_run_job(self):
         self._clean_threads()
