@@ -196,10 +196,10 @@ def maybe_pad_file_with_silence(
     )
     if to_add_begin == 0 and to_add_end == 0:
         logging.info(f"To file {short_name} no need to add silence")
-        return None
-    logging.info(
-        f"Adding {to_add_begin}s to begin and {to_add_end}s to end silence to file {short_name}"
-    )
+    else:
+        logging.info(
+            f"Adding {to_add_begin}s to begin and {to_add_end}s to end silence to file {short_name}"
+        )
 
     if play_paddings and to_add_begin > 0:
         preview = first_few_sec_with_silence_and_beep(file, to_add_begin)
