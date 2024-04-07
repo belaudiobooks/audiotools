@@ -16,6 +16,8 @@ import vlc
 
 from scheduler import Scheduler
 
+DEFAULT_BITRATE = 224000
+
 
 def str2bool(v):
     if isinstance(v, bool):
@@ -68,7 +70,15 @@ def get_silences(file: str) -> Sequence[Silence]:
 
 
 def generate_silence(duration_sec: float) -> ffmpeg.Stream:
-    return ffmpeg.input(f"anullsrc=duration={duration_sec}", f="lavfi")
+    # Generate silence into a separate file and return it as a stream.
+    # Originally we returned stream immediately without saving it into a file.
+    # It lead to noise being added to the main file. Don't know the root cause of the
+    # noise, but getting rid of "on-fly" streams fixes it.
+    silence_file = create_tmp_audiofile()
+    ffmpeg.input(f"anullsrc=duration={duration_sec}", f="lavfi").output(
+        silence_file, audio_bitrate=DEFAULT_BITRATE, ar=44100
+    ).run(overwrite_output=True, capture_stdout=True, capture_stderr=True)
+    return ffmpeg.input(silence_file)
 
 
 def last_few_sec_with_silence_and_beep(
@@ -384,7 +394,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--min_bitrate",
         type=int,
-        default=224000,
+        default=DEFAULT_BITRATE,
         help="for 'ensure_quality' operation. Specifies minimum bitrate. Files with smaller bitrate will be converted to match the minimum",
     )
 
