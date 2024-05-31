@@ -15,6 +15,7 @@ import ffmpeg
 import vlc
 
 from scheduler import Scheduler
+from youtube import YoutubeVideoType, create_youtube
 
 DEFAULT_BITRATE = 224000
 
@@ -351,10 +352,12 @@ def ensure_quality(
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Audiobook tools.")
     parser.add_argument(
-        "--operation", choices=["pad_silence", "cut", "ensure_quality"], required=True
+        "--operation",
+        choices=["pad_silence", "cut", "ensure_quality", "create_youtube"],
+        required=True,
     )
     parser.add_argument("--out_dir", required=True)
-    parser.add_argument("audiofiles", nargs="+", metavar="001.mp3")
+    parser.add_argument("audiofiles", nargs="*", metavar="001.mp3")
     parser.add_argument(
         "--first_n_sec",
         type=float,
@@ -397,6 +400,16 @@ def parse_args() -> argparse.Namespace:
         default=DEFAULT_BITRATE,
         help="for 'ensure_quality' operation. Specifies minimum bitrate. Files with smaller bitrate will be converted to match the minimum",
     )
+    # Create books_vigeo_generator argument
+    parser.add_argument(
+        "--books_video_generator",
+        help="path to the checked out version of https://github.com/vaukalak/books-video-generator",
+    )
+    parser.add_argument(
+        "--youtube_video_type",
+        choices=[i.value for i in YoutubeVideoType],
+        help="When set to true generates full video (for free audiobooks). Otherwise uses the first chapter only for paid books.",
+    )
 
     return parser.parse_args()
 
@@ -427,6 +440,18 @@ def main():
             out_dir=args.out_dir,
             overwrite=args.overwrite,
             min_bitrate=args.min_bitrate,
+        )
+    elif args.operation == "create_youtube":
+        if args.books_video_generator is None:
+            logging.error("--books_video_generator is not provided.")
+            return
+        if args.youtube_video_type is None:
+            logging.error("--youtube_video_type is not provided.")
+            return
+        create_youtube(
+            out_dir=args.out_dir,
+            books_video_generator=args.books_video_generator,
+            video_type=args.youtube_video_type,
         )
 
 
