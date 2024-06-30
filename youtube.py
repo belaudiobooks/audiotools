@@ -28,7 +28,6 @@ def create_youtube(
           repo checked out locally.
         video_type: Type of video to generate. See YoutubeVideoType."""
     book = Book(out_dir)
-    print(book.metadata)
     book_name = "from_tools"
     env = {}
     env.update(os.environ)

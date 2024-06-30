@@ -46,11 +46,9 @@ class Book:
         return os.path.join(self.dir, "ex-2.mp3")
 
     def _get_audio_files(self) -> list[str]:
-        return [
-            os.path.join(self.dir, file)
-            for file in os.listdir(self.dir)
-            if re.match(r"\d+.mp3", file)
-        ]
+        files = [file for file in os.listdir(self.dir) if re.match(r"\d+.mp3", file)]
+        files = sorted(files, key=lambda x: int(os.path.splitext(x)[0]))
+        return [os.path.join(self.dir, file) for file in files]
 
     def _parse_metadata(self) -> BookMetadata:
         data = {
@@ -78,7 +76,9 @@ class Book:
                     else:
                         data["Апісанне"] += line.strip() + "\n"
                 elif type == "chapters":
-                    data["Змест"].append(line.strip())
+                    chapter = line.strip()
+                    if chapter != "":
+                        data["Змест"].append(chapter)
 
         def maybe_split_empty(x: str):
             return [] if len(x) == 0 else x.split(", ")
@@ -88,7 +88,7 @@ class Book:
             authors=maybe_split_empty(data.get("Аўтар", "")),
             narrators=maybe_split_empty(data.get("Чытае", "")),
             translators=maybe_split_empty(data.get("Пераклад", "")),
-            description=data["Апісанне"],
+            description=data["Апісанне"].strip(),
             chapters=data["Змест"],
         )
 

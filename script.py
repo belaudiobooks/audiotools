@@ -14,6 +14,7 @@ import readchar
 import ffmpeg
 import vlc
 
+from podcast import create_podcast
 from scheduler import Scheduler
 from youtube import YoutubeVideoType, create_youtube
 
@@ -353,7 +354,13 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Audiobook tools.")
     parser.add_argument(
         "--operation",
-        choices=["pad_silence", "cut", "ensure_quality", "create_youtube"],
+        choices=[
+            "pad_silence",
+            "cut",
+            "ensure_quality",
+            "create_youtube",
+            "create_podcast",
+        ],
         required=True,
     )
     parser.add_argument("--out_dir", required=True)
@@ -453,6 +460,8 @@ def main():
             books_video_generator=args.books_video_generator,
             video_type=args.youtube_video_type,
         )
+    elif args.operation == "create_podcast":
+        create_podcast(book_dir=args.out_dir)
 
 
 if __name__ == "__main__":
