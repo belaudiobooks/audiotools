@@ -9,6 +9,7 @@ import tempfile
 import time
 from typing import Any
 import readchar
+import shutil
 
 
 import ffmpeg
@@ -208,6 +209,8 @@ def maybe_pad_file_with_silence(
     )
     if to_add_begin == 0 and to_add_end == 0:
         logging.info(f"To file {short_name} no need to add silence")
+        shutil.copy(file, out_directory)
+        return None
     else:
         logging.info(
             f"Adding {to_add_begin}s to begin and {to_add_end}s to end silence to file {short_name}"
@@ -341,6 +344,8 @@ def ensure_quality(
         bitrate = get_bitrate(file)
         if bitrate >= min_bitrate:
             logging.info(f"Skipping {short_name} as it has bitrate {bitrate}")
+            shutil.copy(file, out_dir)
+            continue
 
         logging.info(f"Converting {short_name} because it has bitrate {bitrate}")
         stream = ffmpeg.input(file).output(
