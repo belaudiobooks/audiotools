@@ -46,8 +46,8 @@ class Book:
         return os.path.join(self.dir, "ex-2.mp3")
 
     def _get_audio_files(self) -> list[str]:
-        files = [file for file in os.listdir(self.dir) if re.match(r"\d+.mp3", file)]
-        files = sorted(files, key=lambda x: int(os.path.splitext(x)[0]))
+        files = [file for file in os.listdir(self.dir) if re.match(r"\d+.*.mp3", file)]
+        files = sorted(files, key=lambda x: int(os.path.splitext(x)[0].split(" ")[0]))
         return [os.path.join(self.dir, file) for file in files]
 
     def _parse_metadata(self) -> BookMetadata:

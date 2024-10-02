@@ -33,6 +33,8 @@ def create_youtube(
     env.update(os.environ)
     env.update({"BOOK": book_name})
     book_resource = os.path.join(books_video_generator, "resource", book_name)
+    if os.path.exists(book_resource):
+        shutil.rmtree(book_resource)
     if not os.path.exists(os.path.join(book.dir, "youtube_config.yml")):
         copied_sample = os.path.join(book.dir, "youtube_config.yml")
         shutil.copy(
@@ -57,7 +59,15 @@ def create_youtube(
             book.get_intro_file(), os.path.join(book_resource, "audio", "00.mp3")
         )
     os.remove(os.path.join(book_resource, "background.jpg"))
-    shutil.copy(book.youtube_image, os.path.join(book_resource, "background.png"))
+    subprocess.run(
+        [
+            "convert",
+            book.youtube_image,
+            "-resize",
+            "1920x1080",
+            os.path.join(book_resource, "background.png"),
+        ],
+    )
     shutil.copy(
         os.path.join(book.dir, "youtube_config.yml"),
         os.path.join(book_resource, "config.yml"),
@@ -149,5 +159,6 @@ def _generate_chapters_csv(video_type: YoutubeVideoType, book: Book, out_dir: st
                 chapter_name = f"Частка {i + 1}"
             f.write(f'{i+1},"{chapter_name}"\n')
             # For paid books we give provide only the first chapter on youtube.
-            if video_type == YoutubeVideoType.PAID:
+            print(i)
+            if video_type == YoutubeVideoType.PAID and i > 1:
                 break
