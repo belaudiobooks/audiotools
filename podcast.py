@@ -4,12 +4,13 @@ import os
 import shutil
 import subprocess
 
-
 import ffmpeg
 from book import Book
 from feedgen.feed import FeedGenerator
 from feedgen.ext.podcast import PodcastExtension
 import belorthography
+
+from util import get_bitrate, get_duration_sec
 
 
 def create_podcast(book_dir: str):
@@ -109,7 +110,7 @@ def _generate_rss(book: Book, podcast_dir: str):
             "audio/mpeg",
         )
         entry.podcast.itunes_episode(i + 1)
-        entry.podcast.itunes_duration(_get_duration(file))
+        entry.podcast.itunes_duration(_format_duration(file))
         entry.pubDate(first_pub_date)
         first_pub_date += datetime.timedelta(days=1)
     fg.rss_file(os.path.join(podcast_dir, "rss.xml"), pretty=True, encoding="utf-8")
@@ -131,13 +132,9 @@ def _generate_gcs_folder_name(book: Book) -> str:
     return name
 
 
-def _get_bitrate(file: str) -> int:
-    return int(ffmpeg.probe(file)["format"]["bit_rate"])
-
-
-def _get_duration(file: str) -> str:
-    result = ffmpeg.probe(file)
-    sec = float(result["format"]["duration"])
+def _format_duration(file: str) -> str:
+    """Get duration of audio file as HH:MM:SS string."""
+    sec = get_duration_sec(file)
     return str(datetime.timedelta(seconds=int(sec)))
 
 
@@ -145,6 +142,6 @@ def _concat_files(files: list[str], output: str):
     inputs = [ffmpeg.input(file) for file in files]
     ffmpeg.concat(*inputs, a=1, v=0).output(
         output,
-        audio_bitrate=_get_bitrate(files[0]),
+        audio_bitrate=get_bitrate(files[0]),
         ar=44100,
     ).run(overwrite_output=True, quiet=True)

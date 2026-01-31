@@ -1,6 +1,5 @@
 import argparse
 from collections.abc import Sequence
-import functools
 import logging
 import os
 import re
@@ -15,11 +14,11 @@ import shutil
 import ffmpeg
 import vlc
 
+from merge_chapters import merge_chapters
 from podcast import create_podcast
 from scheduler import Scheduler
+from util import DEFAULT_BITRATE, get_bitrate, get_duration_sec, get_file_size
 from youtube import YoutubeVideoType, create_youtube
-
-DEFAULT_BITRATE = 224000
 
 
 def str2bool(v):
@@ -142,21 +141,6 @@ def play_file(file: str):
     time.sleep(get_duration_sec(file))
 
 
-@functools.cache
-def get_duration_sec(file: str) -> float:
-    result = ffmpeg.probe(file)
-    return float(result["format"]["duration"])
-
-
-@functools.cache
-def get_file_size(file: str) -> int:
-    return os.stat(file).st_size
-
-
-def get_bitrate(file: str) -> int:
-    return int(ffmpeg.probe(file)["format"]["bit_rate"])
-
-
 def how_much_silence_to_add_sec(
     file: str, min_silence_begin_sec: float, min_silence_end_sec: float
 ) -> tuple[float, float]:
@@ -213,7 +197,7 @@ def maybe_pad_file_with_silence(
         return None
     else:
         logging.info(
-            f"Adding {to_add_begin}s to begin and {to_add_end}s to end silence to file {short_name}"
+            f"Adding {to_add_begin:.2f}s to begin and {to_add_end:.2f}s to end silence to file {short_name}"
         )
 
     if play_paddings and to_add_begin > 0:
@@ -365,6 +349,7 @@ def parse_args() -> argparse.Namespace:
             "ensure_quality",
             "create_youtube",
             "create_podcast",
+            "merge_chapters",
         ],
         required=True,
     )
@@ -391,14 +376,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--min_silence_begin_sec",
         type=float,
-        default=0.5,
-        help="for 'pad_silence' operation. Specifies min amoun of silence at the beginning of a file. Default 0.5s",
+        default=1,
+        help="for 'pad_silence' operation. Specifies min amount of silence at the beginning of a file. Default 0.5s",
     )
     parser.add_argument(
         "--min_silence_end_sec",
         type=float,
         default=2,
-        help="for 'pad_silence' operation. Specifies min amoun of silence at the end of a file. Default 2s",
+        help="for 'pad_silence' operation. Specifies min amount of silence at the end of a file. Default 2s",
     )
     parser.add_argument(
         "--play_paddings",
@@ -411,6 +396,12 @@ def parse_args() -> argparse.Namespace:
         type=int,
         default=DEFAULT_BITRATE,
         help="for 'ensure_quality' operation. Specifies minimum bitrate. Files with smaller bitrate will be converted to match the minimum",
+    )
+    parser.add_argument(
+        "--play_seconds",
+        type=float,
+        default=5.0,
+        help="for 'merge_chapters' operation. How many seconds to play from the beginning of each file. Default 5s",
     )
     # Create books_vigeo_generator argument
     parser.add_argument(
@@ -467,6 +458,12 @@ def main():
         )
     elif args.operation == "create_podcast":
         create_podcast(book_dir=args.out_dir)
+    elif args.operation == "merge_chapters":
+        merge_chapters(
+            files=args.audiofiles,
+            out_dir=args.out_dir,
+            play_seconds=args.play_seconds,
+        )
 
 
 if __name__ == "__main__":
